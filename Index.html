@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Itinerario Van General de NY</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --color-primary: #E3DCD2;
+            --color-secondary: #C4B6A6;
+            --color-accent: #9C8779;
+            --color-dark: #4A4A48;
+            --color-text: #333333;
+            --font-main: 'Inter', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--color-primary);
+            color: var(--color-text);
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        .hero {
+            height: 100vh;
+            background: linear-gradient(rgba(227, 220, 210, 0.9), rgba(227, 220, 210, 0.7)),
+                        url('https://images.unsplash.com/photo-1499092346589-b9b6be3e94b2?auto=format&fit=crop&w=1920&q=80');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 100px;
+            background: linear-gradient(to top, var(--color-primary), transparent);
+        }
+
+        .nav-container {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--color-dark);
+            text-decoration: none;
+            position: relative;
+        }
+
+        .logo::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 30%;
+            height: 2px;
+            background: var(--color-accent);
+            transition: width 0.3s ease;
+        }
+
+        .logo:hover::after {
+            width: 100%;
+        }
+
+        .itinerary-container {
+            max-width: 1200px;
+            margin: 4rem auto;
+            padding: 0 2rem;
+        }
+
+        .itinerary-day {
+            background: white;
+            border-radius: 15px;
+            padding: 3rem;
+            margin-bottom: 4rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .day-toggle {
+            cursor: pointer;
+        }
+
+        .day-header {
+            position: relative;
+            transition: margin-bottom 0.3s ease;
+        }
+
+        .itinerary-day:not(.active) .day-header {
+            margin-bottom: 0;
+        }
+
+        .day-number {
+            font-size: 4rem;
+            font-weight: 700;
+            color: var(--color-primary);
+            position: absolute;
+            top: -1.5rem;
+            left: -1rem;
+            opacity: 0.3;
+            z-index: 0;
+        }
+
+        .day-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .itinerary-day.active .day-content {
+            max-height: 2000px;
+        }
+
+        .itinerary-item {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 3rem;
+            position: relative;
+            padding-left: 2rem;
+            border-left: 2px solid var(--color-secondary);
+            transition: transform 0.3s ease;
+        }
+
+        .itinerary-item:hover {
+            transform: translateX(10px);
+        }
+
+        .item-number {
+            width: 40px;
+            height: 40px;
+            background: var(--color-accent);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-weight: 600;
+        }
+
+        .weather-icon {
+            width: 30px;
+            height: 30px;
+            margin-left: 1rem;
+            filter: grayscale(1) opacity(0.8);
+        }
+
+        .map-container {
+            height: 400px;
+            background: var(--color-secondary);
+            border-radius: 15px;
+            margin: 3rem 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin: 0.5rem 0;
+        }
+
+        .intensity-high {
+            background: rgba(156, 135, 121, 0.2);
+            color: var(--color-accent);
+        }
+
+        .restaurant-tag {
+            background: rgba(76, 175, 80, 0.1);
+            color: #4CAF50;
+            font-size: 0.9rem;
+            padding: 0.2rem 0.7rem;
+            margin-left: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .itinerary-item {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .itinerary-day {
+                padding: 2rem;
+            }
+
+            .day-number {
+                font-size: 3rem;
+            }
+        }
+
+        /* Animaciones */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.6s ease forwards;
+        }
+
+        .hover-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .hover-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .nyc-detail {
+            position: absolute;
+            background: var(--color-accent);
+            opacity: 0.1;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="nav-container">
+        <nav>
+            <a href="#" class="logo">Van General NY</a>
+        </nav>
+    </div>
+
+    <div class="hero">
+        <h1 style="font-size: 4rem; color: var(--color-dark); text-align: center; max-width: 800px; line-height: 1.1;">
+            Descubre Nueva York<br>
+            <span style="font-size: 1.5rem; font-weight: 300; display: block; margin-top: 1rem;">Itinerarios curados para vivir la esencia de la ciudad</span>
+        </h1>
+    </div>
+
+    <div class="itinerary-container">
+        <!-- Día 1 Completo -->
+<div class="itinerary-day hover-card animate-fade-in">
+    <div class="nyc-detail" style="width: 150px; height: 150px; border-radius: 50%; top: -50px; right: -50px;"></div>
+    <div class="day-toggle">
+        <div class="day-header">
+            <div class="day-number">1</div>
+            <h2>Dumbo y Chinatown</h2>
+            <div style="margin: 1rem 0;">
+                <span class="badge intensity-high">Intensidad MEDIA-ALTA</span>
+                <span class="badge">⏱️ 7.5 horas</span>
+                <img src="https://img.icons8.com/ios-filled/50/sun--v1.png" class="weather-icon"/>
+            </div>
+        </div>
+    </div>
+    <div class="day-content">
+        <div class="itinerary-item">
+            <div class="item-number">1</div>
+            <div>
+                <h3>Squibb Park Bridge</h3>
+                <p>Puente peatonal que conecta Brooklyn Heights con Dumbo. Desde Columbia Heights St.</p>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">2</div>
+            <div>
+                <h3>Harriet’s Rooftop</h3>
+                <p>Un rooftop con muy buenas vistas para sacar fotos. Entrar directo e ir al piso 10R.</p>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">3</div>
+            <div>
+                <h3>Brooklyn Bridge desde abajo</h3>
+                <p>Pasá por debajo del puente para verlo desde otro ángulo.</p>
+                <span class="restaurant-tag">Shake Shack 🍽</span>
+                <span class="restaurant-tag">Juliana's 🍽</span>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">4</div>
+            <div>
+                <h3>Empire Stores y Time Out Market Roof</h3>
+                <p>Espacio con locales y un rooftop que tiene lindas vistas a Manhattan.</p>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">5</div>
+            <div>
+                <h3>Playa en Dumbo</h3>
+                <p>Parada corta en una playa chica al lado del río.</p>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">6</div>
+            <div>
+                <h3>Calle con vista al Manhattan Bridge</h3>
+                <p>Calle con la vista clásica del puente y el Empire State.</p>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">7</div>
+            <div>
+                <h3>Cruzar el Brooklyn Bridge</h3>
+                <p>Cruzar el puente caminando para llegar a Manhattan (Ideal al atardecer).</p>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">8</div>
+            <div>
+                <h3>Chinatown y Little Italy</h3>
+                <p>Recorrer las calles, probar algo de comida típica y terminar el día aquí.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+        <!-- Día 2 Completo -->
+<div class="itinerary-day hover-card animate-fade-in">
+    <div class="day-toggle">
+        <div class="day-header">
+            <div class="day-number">2</div>
+            <h2>Midtown</h2>
+            <div style="margin: 1rem 0;">
+                <span class="badge intensity-high">Intensidad MEDIA</span>
+                <span class="badge">⏱️ 7 horas</span>
+                <img src="https://img.icons8.com/ios-filled/50/clouds.png" class="weather-icon"/>
+            </div>
+        </div>
+    </div>
+    <div class="day-content">
+        <div class="itinerary-item">
+            <div class="item-number">1</div>
+            <div>
+                <h3>Union Square</h3>
+                <p>Plaza conocida por su ambiente animado, con mercados y bares alrededor.</p>
+                <span class="restaurant-tag">Levain Bakery 🍽</span>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">2</div>
+            <div>
+                <h3>Flatiron Building</h3>
+                <p>Edificio icónico, con una forma triangular, ubicado sobre la Broadway.</p>
+                <span class="restaurant-tag">Chelsea Flea (Abre solo sábados y domingos)</span>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">3</div>
+            <div>
+                <h3>Empire State</h3>
+                <p>Mirar este famoso rascacielos desde afuera, con su imponente fachada.</p>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">4</div>
+            <div>
+                <h3>Biblioteca Pública de NY</h3>
+                <p>Visitar la biblioteca y subir a la terraza para ver la ciudad desde otro ángulo.</p>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">5</div>
+            <div>
+                <h3>Bryant Park</h3>
+                <p>Un parque en el centro de la ciudad, ideal para relajarse y disfrutar de su entorno.</p>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">6</div>
+            <div>
+                <h3>Zona de Rooftops</h3>
+                <p>Lleno de bares en las alturas, perfectos para tomar algo con buenas vistas. (Daintree, The Skylark, Bar 54, Monarch Rooftop, Nubeluz, 230 Fifth).</p>
+                <span class="restaurant-tag">7th Street Burger 🍽</span>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">7</div>
+            <div>
+                <h3>Macy’s de la 34 y 6ta</h3>
+                <p>El famoso centro comercial de la ciudad, un lugar obligado para ir de compras.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="itinerary-day hover-card animate-fade-in">
+    <div class="day-toggle">
+        <div class="day-header">
+            <div class="day-number">3</div>
+            <h2>World Trade Center y Wall Street</h2>
+            <div style="margin: 1rem 0;">
+                <span class="badge intensity-high">Intensidad MEDIA-BAJA</span>
+                <span class="badge">⏱️ 6 horas</span>
+                <img src="https://img.icons8.com/ios-filled/50/clouds.png" class="weather-icon"/>
+            </div>
+        </div>
+    </div>
+    <div class="day-content">
+        <div class="itinerary-item">
+            <div class="item-number">1</div>
+            <div>
+                <h3>World Trade Center</h3>
+                <p>Zona con edificios emblemáticos y acceso a los puntos principales del recorrido.</p>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">2</div>
+            <div>
+                <h3>Capilla de San Pablo</h3>
+                <p>Una iglesia histórica cerca del World Trade Center.</p>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">3</div>
+            <div>
+                <h3>Fuentes de las torres y Memorial</h3>
+                <p>Espacio con las fuentes conmemorativas y el museo.</p>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">4</div>
+            <div>
+                <h3>Oculus</h3>
+                <p>Centro comercial y estación con arquitectura moderna.</p>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">5</div>
+            <div>
+                <h3>Brookfield Place</h3>
+                <p>Complejo con locales, restaurantes y vistas al río.</p>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">6</div>
+            <div>
+                <h3>NY Stock Exchange</h3>
+                <p>El edificio de la Bolsa de Nueva York, símbolo de Wall Street.</p>
+                <span class="restaurant-tag">Liberty Bagels 🍽</span>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">7</div>
+            <div>
+                <h3>Toro de Wall Street</h3>
+                <p>Escultura icónica que representa la fuerza financiera.</p>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">8</div>
+            <div>
+                <h3>Seaport</h3>
+                <p>Una zona histórica revitalizada que ofrece una mezcla de tiendas, restaurantes y un ambiente relajado con vistas al río East.</p>
+                <span class="restaurant-tag">Cannon's Walk</span>
+                <span class="restaurant-tag">Pier 17</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<div class="itinerary-day hover-card animate-fade-in">
+    <div class="day-toggle">
+        <div class="day-header">
+            <div class="day-number">1</div>
+            <h2>High Line hasta Times Square</h2>
+            <div style="margin: 1rem 0;">
+                <span class="badge intensity-high">Intensidad ALTA</span>
+                <span class="badge">⏱️ 8 horas</span>
+                <img src="https://img.icons8.com/ios-filled/50/sun--v1.png" class="weather-icon"/>
+            </div>
+        </div>
+    </div>
+    <div class="day-content">
+        <div class="itinerary-item">
+            <div class="item-number">1</div>
+            <div>
+                <h3>Google NYC</h3>
+                <p>Llegada a la sede de Google en 14th St / 8th Ave.</p>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">2</div>
+            <div>
+                <h3>Chelsea Market</h3>
+                <p>Mercado con locales de comida, arte y productos únicos.</p>
+                <span class="restaurant-tag">LOS TACOS No.1 🍽</span>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">3</div>
+            <div>
+                <h3>Little Island</h3>
+                <p>Isla flotante con jardines y vistas espectaculares al río Hudson.</p>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">4</div>
+            <div>
+                <h3>Pier 57 Rooftop</h3>
+                <p>Espacio en altura para disfrutar de vistas panorámicas.</p>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">5</div>
+            <div>
+                <h3>High Line</h3>
+                <p>Un parque elevado sobre viejas vías de tren, con caminos rodeados de naturaleza y arte.</p>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">6</div>
+            <div>
+                <h3>Hudson Yards</h3>
+                <p>Complejo moderno con tiendas de lujo y restaurantes.</p>
+                <span class="restaurant-tag">The Vessel</span>
+                <span class="restaurant-tag">Little Spain 🍽</span>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">7</div>
+            <div>
+                <h3>Times Square</h3>
+                <p>El corazón de la ciudad, lleno de luces, pantallas gigantes y energía vibrante.</p>
+                <span class="restaurant-tag">Krispy Kreme 🍽</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+<div class="itinerary-day hover-card animate-fade-in">
+    <div class="day-toggle">
+        <div class="day-header">
+            <div class="day-number">2</div>
+            <h2>Staten Island y Paseo en Ferry</h2>
+            <div style="margin: 1rem 0;">
+                <span class="badge intensity-high">Intensidad BAJA</span>
+                <span class="badge">⏱️ 6 horas</span>
+                <img src="https://img.icons8.com/ios-filled/50/clouds.png" class="weather-icon"/>
+            </div>
+        </div>
+    </div>
+    <div class="day-content">
+        <div class="itinerary-item">
+            <div class="item-number">1</div>
+            <div>
+                <h3>Battery Park</h3>
+                <p>Comenzá el día en este parque frente al mar, con vistas a la Estatua de la Libertad.</p>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">2</div>
+            <div>
+                <h3>Ferry a Staten Island (gratuito)</h3>
+                <p>Tomá el ferry hacia Staten Island. Es un paseo corto y gratuito con buenas vistas de Manhattan y la estatua.</p>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">3</div>
+            <div>
+                <h3>Empire Outlets</h3>
+                <p>Un centro comercial moderno con tiendas y cafeterías. Ideal para una pasada rápida.</p>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">4</div>
+            <div>
+                <h3>Ferry de 4 usd hasta Hudson Yards</h3>
+                <p>Volvé a Manhattan en ferry (con costo) y llegá a Hudson Yards, una zona nueva con arquitectura impresionante.</p>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">5</div>
+            <div>
+                <h3>B&H</h3>
+                <p>Visita esta famosa tienda de tecnología. Es muy conocida entre los fotógrafos y técnicos.</p>
+                <span class="restaurant-tag">Liberty Bagels Midtown 🍽</span>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">6</div>
+            <div>
+                <h3>Madison Square Garden y Penn Station</h3>
+                <p>Finalizá el recorrido viendo el Madison Square Garden, uno de los estadios más icónicos de Nueva York, y la renovada estación Penn Station, que aspira a ser un nuevo Times Square.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<div class="itinerary-day hover-card animate-fade-in">
+    <div class="day-toggle">
+        <div class="day-header">
+            <div class="day-number">3</div>
+            <h2>Fifth Ave y Rascacielos</h2>
+            <div style="margin: 1rem 0;">
+                <span class="badge intensity-high">Intensidad MEDIA-ALTA</span>
+                <span class="badge">⏱️ 7 horas</span>
+                <img src="https://img.icons8.com/ios-filled/50/sun--v1.png" class="weather-icon"/>
+            </div>
+        </div>
+    </div>
+    <div class="day-content">
+        <div class="itinerary-item">
+            <div class="item-number">1</div>
+            <div>
+                <h3>Mirador Summit</h3>
+                <p>Es un mirador moderno con vistas panorámicas de la ciudad, ideal para empezar el recorrido.</p>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">2</div>
+            <div>
+                <h3>Grand Central Terminal (y Whispering Gallery)</h3>
+                <p>Un emblema de la ciudad, famosa por su arquitectura y la galería donde se pueden escuchar susurros desde las esquinas opuestas.</p>
+                <span class="restaurant-tag">$1.50 Fresh Pizza 🍽</span>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">3</div>
+            <div>
+                <h3>Chrysler Building y nuevo JP Morgan Building</h3>
+                <p>El Chrysler es uno de los rascacielos más icónicos de Nueva York. El JP Morgan Building, de arquitectura más reciente, también está en la zona.</p>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">4</div>
+            <div>
+                <h3>Quinta Avenida (empezar por 42nd St.)</h3>
+                <p>La famosa calle con tiendas de lujo y puntos históricos. Comenzá desde la 42nd y andá recorriéndola.</p>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">5</div>
+            <div>
+                <h3>Rockefeller Center</h3>
+                <p>Plaza conocida por su enorme árbol de Navidad y el famoso Radio City Music Hall.</p>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">6</div>
+            <div>
+                <h3>Catedral de Saint Patrick</h3>
+                <p>Impresionante iglesia gótica, muy cerca de la Quinta Avenida, ideal para ver tanto por fuera como por dentro.</p>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">7</div>
+            <div>
+                <h3>Trump Tower</h3>
+                <p>La torre que lleva el nombre del expresidente, un centro comercial y oficinas. Es un buen lugar para una pausa.</p>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">8</div>
+            <div>
+                <h3>Plaza Hotel</h3>
+                <p>Un hotel de lujo, famoso por su historia y su ubicación frente al Central Park.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+<div class="itinerary-day hover-card animate-fade-in">
+    <div class="day-toggle">
+        <div class="day-header">
+            <div class="day-number">4</div>
+            <h2>Williamsburg y Roosevelt</h2>
+            <div style="margin: 1rem 0;">
+                <span class="badge intensity-high">Intensidad MEDIA</span>
+                <span class="badge">⏱️ 7 horas</span>
+                <img src="https://img.icons8.com/ios-filled/50/clouds.png" class="weather-icon"/>
+            </div>
+        </div>
+    </div>
+    <div class="day-content">
+        <div class="itinerary-item">
+            <div class="item-number">1</div>
+            <div>
+                <h3>North 5th Street Pier and Park</h3>
+                <p>Un parque junto al agua con vistas de Manhattan y el puente de Brooklyn.</p>
+                <span class="restaurant-tag">Wythe Hotel Roof</span>
+                <span class="restaurant-tag">L'Industrie Pizzeria 🍽</span>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">2</div>
+            <div>
+                <h3>Domino Park</h3>
+                <p>Un parque recientemente renovado que se encuentra en el lugar de la antigua fábrica de azúcar Domino. Con un diseño moderno y excelentes vistas del río y de Manhattan.</p>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">3</div>
+            <div>
+                <h3>Williamsburg (caminar por Bedford Ave)</h3>
+                <p>Paseá por esta calle principal, llena de tiendas, cafés y judíos ortodoxos.</p>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">4</div>
+            <div>
+                <h3>Ford Foundation Building</h3>
+                <p>Un edificio icónico de arquitectura moderna con un parque en su interior.</p>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">5</div>
+            <div>
+                <h3>Tudor City Bridge</h3>
+                <p>Puente peatonal con una buena vista de la zona de Midtown Manhattan.</p>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">6</div>
+            <div>
+                <h3>The Hugh y 601 Lexington</h3>
+                <p>Lugar relajado en The Hugh y el rascacielos 601 Lexington con vistas y arquitectura moderna.</p>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">7</div>
+            <div>
+                <h3>Teleférico Isla Roosevelt</h3>
+                <p>Viaje corto en teleférico para ver Manhattan desde otro ángulo y cruzar a Roosevelt Island.</p>
+            </div>
+        </div>
+
+        <div class="itinerary-item">
+            <div class="item-number">8</div>
+            <div>
+                <h3>Smallpox Memorial Hospital</h3>
+                <p>Un sitio histórico, que data de la época en que la isla se utilizaba para tratar enfermedades.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+    <script>
+        // Toggle para expandir días
+        document.querySelectorAll('.day-toggle').forEach(toggle => {
+            toggle.addEventListener('click', function() {
+                const day = this.closest('.itinerary-day');
+                day.classList.toggle('active');
+            });
+        });
+
+        // Intersection Observer para animaciones
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate-fade-in');
+                }
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.itinerary-day').forEach((element) => {
+            observer.observe(element);
+        });
+    </script>
+</body>
+</html>
